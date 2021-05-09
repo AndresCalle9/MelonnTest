@@ -6,8 +6,11 @@ const {
     createOrder
 } = require('../controllers/order.controller');
 
-// Consultar ordenes
+// Get all orders
 router.get('/api/orders',getOrders);
+// Get 1 order
+router.get('/api/order/:id')
+// Crete a order
 router.post('/api/orders',createOrder);
 
 

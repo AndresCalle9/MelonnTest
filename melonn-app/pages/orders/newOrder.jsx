@@ -169,7 +169,7 @@ function newOrder({ methods, statusCode }) {
           onChange={handleChange}
         />
         {order.items.map((item) => {
-          return <ProductCard item={item} key={item.name}/>;
+          return <ProductCard item={item} key={item.productName}/>;
         })}
         <div className={s.productForm}>
           <label htmlFor="">Nombre del producto:</label>
