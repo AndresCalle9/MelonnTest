@@ -1,2 +1,23 @@
 node_modules
 .env
+# dependencies
+melonn-app/node_modules
+melonn-app/.pnp
+melonn-app/.pnp.js
+
+# testing
+melonn-app/coverage
+
+# production
+melonn-app/build
+
+# misc
+melonn-app/.DS_Store
+melonn-app/.env.local
+melonn-app/.env.development.local
+melonn-app/.env.test.local
+melonn-app/.env.production.local
+
+melonn-app/npm-debug.log*
+melonn-app/yarn-debug.log*
+melonn-app/yarn-error.log*
