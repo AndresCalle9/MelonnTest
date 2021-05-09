@@ -34,22 +34,9 @@ const getOffDays = async (req, res) => {
     return res.json({ message: error.message });
   }
 }
-
-//Function to estimate the variable Now data time
-const getNowDataTime = () => {
-  try {
-    const today = new Date();
-    const res = getFormatDate(today)
-    return (res)
-  } catch (error) {
-    return ({ message: error.message });
-  }
-};
-
 //Function to get the time
-const getDataTimeEpoch = () => {
+const getDataTimeEpoch = (today) => {
   try {
-    const today = new Date();
     const epoch = Date.UTC(today.getFullYear(), (today.getMonth() + 1), today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds(), today.getMilliseconds())
     return epoch;
   } catch (error) {
@@ -67,11 +54,27 @@ const getRandomArbitrary = (min, max) => {
 }
 
 // function to generate internal order number 
-const generateIntOrderNumber = () => {
+const generateIntOrderNumber = (date) => {
   try {
-    const epoch = getDataTimeEpoch();
+    const epoch = getDataTimeEpoch(date);
     const random = getRandomArbitrary(0, 100);
     return "MSE" + epoch + random;
+  } catch (error) {
+    return ({ message: error.message });
+  }
+}
+//Function to handle the wrong validation 
+const handleWrongValidation = (orderData) => {
+  try {
+    orderData.packPromiseMin = null;
+    orderData.packPromisaMax = null;
+    orderData.shipPromiseMin = null;
+    orderData.shipPromisaMax = null;
+    orderData.deliveryPromiseMin = null;
+    orderData.deliveryPromisaMax = null;
+    orderData.readyPickupPromiseMin = null;
+    orderData.readyPickupPromisaMax = null;
+    return orderData
   } catch (error) {
     return ({ message: error.message });
   }
@@ -94,17 +97,16 @@ const getFormatDate = (date) => {
 }
 //Function to verify if tomorrow is a business day
 const verifyBusinessDays = async (date, offDays) => {
-  const delay = offDays.some((offDay) => date == offDay)
-  return delay
+  const noBusinessDay = offDays.some((offDay) => date == offDay)
+  return noBusinessDay
 }
 //Function to create next business day
-const nextBusinesDays = async () => {
+const nextBusinesDays = async (offDays) => {
   try {
+    let today = new Date();
     let nextBusinessDays = [];
-    let date = new Date();
-    const offDays = await getOffDays();
     while (nextBusinessDays.length < 10) {
-      const nextDayAux = new Date(date.setDate(date.getDate() + 1));
+      const nextDayAux = new Date(today.setDate(today.getDate() + 1));
       const nextDay = getFormatDate(nextDayAux);
       const delay = await verifyBusinessDays(nextDay, offDays)
       if (delay == false) {
@@ -119,10 +121,9 @@ const nextBusinesDays = async () => {
 //Function to calculate the weight of the list itmes in the order
 const calculateOrderWeight = (items) => {
   try {
-
     let orderWeight = 0
     items.forEach(item => {
-      orderWeight += (parseFloat(item.productWeight)*parseInt(item.productQty));
+      orderWeight += (parseFloat(item.productWeight) * parseInt(item.productQty));
     })
     return orderWeight
   } catch (error) {
@@ -132,13 +133,50 @@ const calculateOrderWeight = (items) => {
 //Function to validate the weight
 const verifyWeight = (min, max, weight) => {
   try {
-    let validate = true;
+    let validated = true;
     if (min <= weight && weight <= max) {
-      validate = true;
+      validated = true;
     } else {
-      validate = false
+      validated = false
     }
-    return validate
+    return validated
+  } catch (error) {
+    return ({ message: error.message });
+  }
+}
+//Function to validate day type
+const verifyDayType = async (date, offDays, type) => {
+  try {
+    let validated = false;
+    if (type == "ANY") {
+      validated = true;
+    }
+    else if (type == "BUSINESS") {
+      const day = getFormatDate(date)
+      const offDay = await verifyBusinessDays(day, offDays)
+      // console.log(offDay)
+      if (offDay == false) {
+        validated = true;
+      } else {
+        validated = false;
+      }
+    }
+    return validated
+  } catch (error) {
+    return ({ message: error.message });
+  }
+}
+//Function to validate the time of the day 
+const verifyTumeOfDay = async (date, from, to) => {
+  try {
+    let validated = true;
+    const hour = date.getHours();
+    if (from <= hour && hour <= to) {
+      validated = true;
+    } else {
+      validated = false
+    }
+    return validated
   } catch (error) {
     return ({ message: error.message });
   }
@@ -156,30 +194,37 @@ module.exports = {
   //Module to create a new order
   createOrder: async (req, res) => {
     try {
-      const orderData = req.body;
+      let orderData = req.body;
       const rules = await getRules(orderData.shippingMethod);
-      orderData.creationDataTime = getNowDataTime();
-      orderData.internalOrderNumber = generateIntOrderNumber();
-      const nextBusinessDays = await nextBusinesDays();
+      const offDays = await getOffDays();
+      // const nowDataTime = new Date()
+      const today = new Date(); // for sunday test
+      const nowDataTime = new Date(today.setDate(today.getDate() + 1)); //for sunday tests
+      orderData.creationDataTime = getFormatDate(nowDataTime);
+      orderData.internalOrderNumber = generateIntOrderNumber(nowDataTime);
+      orderData.nextBusinessDays = await nextBusinesDays(offDays);
       const orderWeight = calculateOrderWeight(orderData.items)
       const weightValidation = verifyWeight(rules.rules.availability.byWeight.min, rules.rules.availability.byWeight.max, orderWeight)
-      console.log(rules.rules)
-      if (weightValidation == true) {
-        // if{
+      if (weightValidation === true) {
+        const dayTypeValidation = await verifyDayType(nowDataTime, offDays, rules.rules.availability.byRequestTime.dayType);
+        if (dayTypeValidation === true) {
+          const timeOfDay = await verifyTumeOfDay(nowDataTime, rules.rules.availability.byRequestTime.fromTimeOfDay, rules.rules.availability.byRequestTime.toTimeOfDay)
+          // put this code in if(timeOfDay == true) when the hours are in the range
+          console.log(rules.rules.promisesParameters)
+          
+          // if (timeOfDay == true) {
 
-        // }else {
-        //   res.send({ message: "alguna otra validación" })
-        // }
+          // } else {
+          //   orderData = handleWrongValidation(orderData);
+          //   // res.send({ message: "time of day incorrecto" })
+          // }
+        } else {
+          orderData = handleWrongValidation(orderData);
+          // res.send({ message: "Hoy es fin de semana o festivo" })
+        }
       } else {
-        orderData.packPromiseMin = null;
-        orderData.packPromisaMax = null;
-        orderData.shipPromiseMin = null;
-        orderData.shipPromisaMax = null;
-        orderData.deliveryPromiseMin = null;
-        orderData.deliveryPromisaMax = null;
-        orderData.readyPickupPromiseMin = null;
-        orderData.readyPickupPromisaMax = null;
-        res.send({ message: "El peso de la orden esta fuera del rango" })
+        orderData = handleWrongValidation(orderData);
+        // res.send({ message: "El peso de la orden esta fuera del rango" })
       }
       res.send({ orderData })
     } catch (error) {
