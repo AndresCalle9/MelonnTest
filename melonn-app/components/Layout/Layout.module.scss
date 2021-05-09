@@ -1,0 +1,9 @@
+@import "../../styles/variables";
+.container {
+    background-color: $first-color;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: space-between;
+  }

@@ -1,0 +1,1 @@
+export const API_TEST = 'http://localhost:5000'
