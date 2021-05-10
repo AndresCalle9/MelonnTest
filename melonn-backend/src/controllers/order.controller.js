@@ -1,3 +1,4 @@
+const { response } = require('express');
 const fetch = require('isomorphic-unfetch');
 const store = require('store2')
 
@@ -293,8 +294,7 @@ module.exports = {
   getOrders: async (req, res) => {
     try {
       const orders = store.getAll();
-      console.log(orders)
-      res.send({ orders});
+      return res.status(200).json(orders.data);
     } catch (error) {
       return res.json({ message: error.message });
     }
@@ -303,8 +303,9 @@ module.exports = {
   getOrder: async (req, res) => {
     try {
       const { key } = req.params;
-      const order = store.get(key);
-      res.send({order});
+      const orders = store.getAll();
+      const order = orders.data.find((order)=>order.internalOrderNumber == key)
+      return res.status(200).json(order);
     } catch (error) {
       return res.json({ message: error.message });
     }
@@ -374,8 +375,17 @@ module.exports = {
         orderData = handleWrongValidation(orderData);
         // res.send({ message: "The weight is out of range" })
       }
-      store.set(orderData.internalOrderNumber, orderData);
-      res.send({ orderData })
+      const oldOrders = store.getAll();
+      const {data} = oldOrders;
+      if (data){
+        let ordersArr = [...data];
+        ordersArr.push(orderData);
+        store("data",ordersArr);
+      } else {
+        store("data",[orderData]);
+      }
+
+      return res.status(200).json(orderData);
     } catch (error) {
       return res.json({ message: error.message });
     }

@@ -2,15 +2,15 @@ import React from "react";
 import s from "./OrderCard.module.scss";
 import Link from "next/link";
 
-function OrderCard() {
+function OrderCard({data, key ,id}) {
   return (
     <div className={s.card}>
-      <Link href="/orders/temp">
+      <Link href={`/orders/${id}`}>
         <a>
-          <p>Sell Order Number</p>
-          <p>Seller store</p>
-          <p>Creation Date</p>
-          <p>Shipping method</p>
+          <p>Sell Order Number: {data.externalOrderNumber}</p>
+          <p>Seller store: {data.sellerStore}</p>
+          <p>Creation Date: {data.nowDataTime}</p>
+          <p>Shipping method: {data.shippingMethod}</p>
         </a>
       </Link>
     </div>
