@@ -167,7 +167,7 @@ const verifyDayType = async (date, offDays, type) => {
   }
 }
 //Function to validate the time of the day 
-const verifyTumeOfDay = async (date, from, to) => {
+const verifyTimeOfDay = async (date, from, to) => {
   try {
     let validated = true;
     const hour = date.getHours();
@@ -177,6 +177,25 @@ const verifyTumeOfDay = async (date, from, to) => {
       validated = false
     }
     return validated
+  } catch (error) {
+    return ({ message: error.message });
+  }
+}
+//Funtion to validate id the case exists
+const caseValidator = async (date, cases, priority) => {
+  try {
+    const outPut = [];
+    let validated = false
+    const caseAux = cases.find(element => element.priority == priority);
+    if (!caseAux) { //case doesn´t exist
+      validated = false
+    } else {
+      //Conditions
+      validated = true;
+    }
+    outPut.caseAux = caseAux;
+    outPut.validated = validated;
+    return outPut
   } catch (error) {
     return ({ message: error.message });
   }
@@ -208,10 +227,33 @@ module.exports = {
       if (weightValidation === true) {
         const dayTypeValidation = await verifyDayType(nowDataTime, offDays, rules.rules.availability.byRequestTime.dayType);
         if (dayTypeValidation === true) {
-          const timeOfDay = await verifyTumeOfDay(nowDataTime, rules.rules.availability.byRequestTime.fromTimeOfDay, rules.rules.availability.byRequestTime.toTimeOfDay)
-          // put this code in if(timeOfDay == true) when the hours are in the range
-          console.log(rules.rules.promisesParameters)
-          
+          const timeOfDay = await verifyTimeOfDay(nowDataTime, rules.rules.availability.byRequestTime.fromTimeOfDay, rules.rules.availability.byRequestTime.toTimeOfDay)
+          // put this code in if(timeOfDay == true) when the hours are in the range y a su vex dentro de while to change priority
+          let priority = 1;
+          const caseValidation = await caseValidator(nowDataTime, rules.rules.promisesParameters.cases, priority)
+          if (caseValidation.validated == true) {
+            const dayType = caseValidation.caseAux.condition.byRequestTime.dayType;
+            const fromTimeOfDay = caseValidation.caseAux.condition.byRequestTime.fromTimeOfDay;
+            const toTimeOfDay = caseValidation.caseAux.condition.byRequestTime.toTimeOfDay;
+            const caseDayTypeValidation = await verifyDayType(nowDataTime, offDays, dayType);
+            console.log(caseDayTypeValidation)
+            if (caseDayTypeValidation == true) {
+              const caseTimeOfDay = await verifyTimeOfDay(nowDataTime, fromTimeOfDay, toTimeOfDay)
+              console.log(caseTimeOfDay)
+              if (caseTimeOfDay == true) {
+                const workingCase = caseAux//Select workingCase
+                // Calculate pack promise
+              } else {
+              //Priority ++ and while continue
+              }
+            } else {
+              //Priority ++ and while continue
+            }
+          } else {
+            orderData = handleWrongValidation(orderData);
+            // res.send({ message: "Validación del caso fallida" })
+          }
+          // end 
           // if (timeOfDay == true) {
 
           // } else {
