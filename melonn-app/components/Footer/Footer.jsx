@@ -4,9 +4,9 @@ import s from "./Footer.module.scss";
 const Footer = () => {
   return (
     <footer className={s.footer}>
-      <p>Desarrollado por Andrés Calle</p>
-      <p>Número célular: 3003942697</p>
-      <p>Correo: andrescalleuribe@gmail.com</p>
+      <p>Developed by Andrés Calle</p>
+      <p>Phone Number: +57 (300)3942697</p>
+      <p>Email: andrescalleuribe@gmail.com</p>
     </footer>
   );
 };

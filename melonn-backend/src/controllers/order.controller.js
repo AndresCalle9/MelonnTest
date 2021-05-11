@@ -294,7 +294,11 @@ module.exports = {
   getOrders: async (req, res) => {
     try {
       const orders = store.getAll();
+      if (orders.data) {
       return res.status(200).json(orders.data);
+      } else {
+        return res.status(200).json([]);
+      }
     } catch (error) {
       return res.json({ message: error.message });
     }

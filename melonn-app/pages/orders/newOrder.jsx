@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import s from "../../styles/pages/Order.module.scss";
 import ProductCard from "../../components/ProductCard/ProductCard";
-import fetchApi from "../../utils/fetchApi"
+import fetchApi from "../../utils/fetchApi";
+import { useRouter } from "next/router";
+import swal from "@sweetalert/with-react";
 
-// Petición en el servidor para obtener los shipping-methods
+// Ask to melonn API for shipping methods
 export const getServerSideProps = async (ctx) => {
   try {
     const data = await fetch(
@@ -43,7 +45,8 @@ function newOrder({ methods, statusCode }) {
   if (statusCode !== 200) {
     return <Error statusCode={statusCode} />;
   }
-  // Creación de hook para control de parámetros de la orden nueva
+  const router = useRouter();
+  // Creation of hook to magnament the order information
   const [order, setOrder] = useState({
     sellerStore: "",
     shippingMethod: 1, //shipping method by default
@@ -57,6 +60,7 @@ function newOrder({ methods, statusCode }) {
     shippingCountry: "",
     items: [],
   });
+  const [productFlag, setProductFlag] = useState(false);
 
   const handleChange = (e) => {
     setOrder({
@@ -67,42 +71,78 @@ function newOrder({ methods, statusCode }) {
 
   const sendOrder = async (e) => {
     e.preventDefault();
-    const res = await fetchApi("api/orders","POST",order)
-    console.log(await res.json())
+    if (order.items.length == 0) {
+      const carEmpty = await swal({
+        title: "Product list is empty!!",
+        text: "Do you want to create an empty order?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      });
+      if (carEmpty) {
+        const res = await fetchApi("api/orders", "POST", order);
+        console.log(await res.json());
+        router.push("/");
+      }
+    } else {
+      const res = await fetchApi("api/orders", "POST", order);
+      console.log(await res.json());
+      router.push("/");
+    }
   };
 
-  const addProduct = (e) => {
-    e.preventDefault();
-    const item = {
-      productName: productName.value,
-      productQty: productQty.value,
-      productWeight: productWeight.value,
-    };
-    const auxItemsArr = [...order.items]; // asignar valores y no indices
-    auxItemsArr.push(item);
+  const addProduct = async () => {
+    if(!productName.value || !productQty?.value || !productWeight?.value){
+      await swal({
+        title: "A product flied is empty!!",
+        text: "Please review the product information",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      });
+    } else {
+      const item = {
+        productName: productName.value,
+        productQty: productQty.value,
+        productWeight: productWeight.value,
+      };
+      const auxItemsArr = [...order.items];
+      auxItemsArr.push(item);
+      setOrder({
+        ...order,
+        items: auxItemsArr,
+      });
+      setProductFlag(!productFlag);
+    }
+  };
+
+  const deleteProducts = () => {
+    const items = [];
     setOrder({
       ...order,
-      items: auxItemsArr,
+      items: items,
     });
   };
 
   return (
     <div className={s.container}>
-      <h1>Nueva orden</h1>
+      <h1>New order</h1>
       <form className={s.formNewOrder} onSubmit={sendOrder}>
-        <label htmlFor="sellerStore"> Seller Store: </label>
+        <label htmlFor="sellerStore"><b>Seller Store: </b></label>
         <input
           id="sellerStore"
           name="sellerStore"
           type="text"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="shippingMethod"> Shipping Method: </label>
+        <label htmlFor="shippingMethod"><b>Shipping Method: </b></label>
         <select
           type="number"
           id="shippingMethod"
           name="shippingMethod"
           onChange={handleChange}
+          required
         >
           {methods.map((method, index) => {
             return (
@@ -112,78 +152,100 @@ function newOrder({ methods, statusCode }) {
             );
           })}
         </select>
-        <label htmlFor="externalOrderNumber"> External user number: </label>
+        <label htmlFor="externalOrderNumber"><b>External user number: </b></label>
         <input
           id="externalOrderNumber"
           name="externalOrderNumber"
           type="number"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="buyerFullName"> Buyer name: </label>
+        <label htmlFor="buyerFullName"><b>Buyer name: </b></label>
         <input
           id="buyerFullName"
           name="buyerFullName"
           type="text"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="buyerPhoneNumber"> Buyer phone number: </label>
+        <label htmlFor="buyerPhoneNumber"><b>Buyer phone number: </b></label>
         <input
           id="buyerPhoneNumber"
           name="buyerPhoneNumber"
           type="number"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="buyerEmail"> Buyer email: </label>
+        <label htmlFor="buyerEmail"><b>Buyer email: </b></label>
         <input
           id="buyerEmail"
           name="buyerEmail"
           type="email"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="shippingAddress"> shipping address: </label>
+        <label htmlFor="shippingAddress"><b>shipping address: </b></label>
         <input
           id="shippingAddress"
           name="shippingAddress"
           type="text"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="shippingCity"> Shipping city: </label>
+        <label htmlFor="shippingCity"><b>Shipping city: </b></label>
         <input
           id="shippingCity"
           name="shippingCity"
           type="text"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="shippingRegion"> Shippin region: </label>
+        <label htmlFor="shippingRegion"><b>Shippin region: </b></label>
         <input
           id="shippingRegion"
           name="shippingRegion"
           type="text"
           onChange={handleChange}
+          required
         />
-        <label htmlFor="shippingCountry"> Shipping country: </label>
+        <label htmlFor="shippingCountry"><b>Shipping country: </b></label>
         <input
           id="shippingCountry"
           name="shippingCountry"
           type="text"
           onChange={handleChange}
+          required
         />
-        {order.items.map((item) => {
-          return <ProductCard item={item} key={item.productName}/>;
-        })}
-        <div className={s.productForm}>
-          <label htmlFor="">Nombre del producto:</label>
-          <input type="text" name="productName" id="productName" />
-          <label htmlFor="">Cantidad:</label>
-          <input type="text" name="productQty" id="productQty" />
-          <label htmlFor="">Peso:</label>
-          <input type="text" name="productWeight" id="productWeight" />
-          <button className="button" onClick={addProduct}>
-            Guardar producto
-          </button>
+        <div className={s.productsContainer}>
+          {order.items.map((item) => {
+            return <ProductCard item={item} key={item.productName} />;
+          })}
+          <div className={s.productsContainerButtons}>
+            <a className="button" onClick={() => setProductFlag(!productFlag)}>
+              Add product
+            </a>
+            {(order.items.length > 0) && (
+              <a className="button" onClick={deleteProducts}>
+                Delete products
+              </a>
+            )}
+          </div>
+          {productFlag && (
+            <div className={s.productForm}>
+              <label htmlFor="productName"><b>Nombre del producto:</b></label>
+              <input type="text" name="productName" id="productName"/>
+              <label htmlFor="productQty"><b>Cantidad:</b></label>
+              <input type="number" name="productQty" id="productQty"/>
+              <label htmlFor="productWeight"><b>Peso:</b></label>
+              <input type="number" name="productWeight" id="productWeight"/>
+              <button className="button" onClick={addProduct}>
+                Save product
+              </button>
+            </div>
+          )}
         </div>
         <button className="button" type="submit">
-          Crear orden
+          Place order
         </button>
       </form>
     </div>

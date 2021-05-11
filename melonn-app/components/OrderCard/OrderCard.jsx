@@ -2,15 +2,16 @@ import React from "react";
 import s from "./OrderCard.module.scss";
 import Link from "next/link";
 
-function OrderCard({data, key ,id}) {
+function OrderCard({data ,id, methods}) {
+  const method = methods.find((method)=>method.id == data.shippingMethod)
   return (
     <div className={s.card}>
       <Link href={`/orders/${id}`}>
         <a>
-          <p>Sell Order Number: {data.externalOrderNumber}</p>
-          <p>Seller store: {data.sellerStore}</p>
-          <p>Creation Date: {data.nowDataTime}</p>
-          <p>Shipping method: {data.shippingMethod}</p>
+          <p><b> Sell Order Number: </b>{data.externalOrderNumber}</p>
+          <p><b>Seller Store: </b>{data.sellerStore}</p>
+          <p><b>Creation Date: </b>{data.creationDataTime}</p>
+          <p><b>Shipping method: </b>{method.name}</p>
         </a>
       </Link>
     </div>
