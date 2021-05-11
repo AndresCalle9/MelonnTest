@@ -4,10 +4,9 @@ import Link from "next/link";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import s from "../../styles/pages/Order.module.scss";
 
-// Petición en el servidor para obtener los shipping-methods
+// Ask to server to obtain shipping methods
 export const getServerSideProps = async (ctx) => {
   try {
-    console.log(ctx.params.id);
     const orderData = await fetchApi(`api/order/${ctx.params.id}`, "GET");
     if (!orderData) {
       return {
@@ -55,14 +54,14 @@ function order({ order }) {
       </div>
       <div className={s.section}>
         <h3>Promise dates</h3>
-        <p><b>Pack promise min: </b>{order.packPromiseMin}</p>
-        <p><b>Pack promise max: </b>{order.packPromiseMax}</p>
-        <p><b>Phip promise min: </b>{order.shipPromiseMin}</p>
-        <p><b>Phip promise max: </b>{order.shipPromiseMax}</p>
-        <p><b>Pelivery promise min: </b>{order.deliveryPromiseMin}</p>
-        <p><b>Pelivery promise max: </b>{order.deliveryPromiseMax}</p>
-        <p><b>Pickup promise min: </b>{order.pickUpPromiseMin}</p>
-        <p><b>Pickup promise max: </b>{order.pickUpPromiseMax}</p>
+        <p><b>Pack promise min: </b>{order.packPromiseMin || "Not estimated"}</p>
+        <p><b>Pack promise max: </b>{order.packPromiseMax || "Not estimated"}</p>
+        <p><b>Phip promise min: </b>{order.shipPromiseMin || "Not estimated"}</p>
+        <p><b>Phip promise max: </b>{order.shipPromiseMax || "Not estimated"}</p>
+        <p><b>Pelivery promise min: </b>{order.deliveryPromiseMin || "Not estimated"}</p>
+        <p><b>Pelivery promise max: </b>{order.deliveryPromiseMax || "Not estimated"}</p>
+        <p><b>Pickup promise min: </b>{order.pickUpPromiseMin || "Not estimated"}</p>
+        <p><b>Pickup promise max: </b>{order.pickUpPromiseMax || "Not estimated"}</p>
       </div>
       <div className={s.section}>
         <h3>Line items</h3>
